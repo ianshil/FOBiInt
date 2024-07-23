@@ -42,7 +42,7 @@ intros Γ A D0. induction D0 ; intros Γ1 incl.
   exists C ; split ; auto.
 Qed.
 
-(* Variable substituitions preserve provability. *)
+(* Variable substitutions preserve provability. *)
 
 Lemma subst_Ax : forall A f, (Axioms A) -> (Axioms A[f]).
 Proof.

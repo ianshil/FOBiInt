@@ -77,8 +77,5 @@ Definition pair_der Γ Δ : Prop :=
     exists (l : list form), NoDup l /\ (forall A, List.In A l -> Δ A) /\
         FOBIH_prv Γ (list_disj l).
 
-Definition complete Γ Δ : Prop :=
-    forall (A : form), Γ A \/ Δ A.
-
 
 End FOBIH.
