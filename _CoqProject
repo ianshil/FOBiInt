@@ -1,3 +1,3 @@
--R theories/general ""
--R theories/FObiint ""
+-R theories/general General
+-R theories/FObiint FObiint
 theories
