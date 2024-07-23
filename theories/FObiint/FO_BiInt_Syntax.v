@@ -1,6 +1,3 @@
-(** * First-Order Logic *)
-(** ** Syntax *)
-
 Require Import Lia.
 Require Import Ensembles.
 Require Import Coq.Vectors.Vector.
