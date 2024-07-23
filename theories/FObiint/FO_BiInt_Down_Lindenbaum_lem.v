@@ -352,6 +352,17 @@ Qed.
     eapply MP. apply list_conj_in_list. apply (Ldext_cum1 k (max n k)) ; auto. lia. apply Id ; split.
   Qed.
 
+  Lemma dext_el phi :
+    dext phi -> w phi.
+  Proof.
+    intro H ; subst ; auto. destruct H.
+    destruct (LEM (w phi)) ; auto. exfalso. eapply (dext_nder (S x)) ; auto.
+    exists [phi]. repeat split.
+    - apply NoDup_cons. intro H2 ; inversion H2. apply NoDup_nil.
+    - intros D HD ; inversion HD ; subst. right ; auto. inversion H1.
+    - cbn. eapply MP. apply Ax ; eapply A3 ; reflexivity. apply Id. exists x ; exact H.
+  Qed.
+
   Lemma dext_ex_henk :
     ex_henk dext.
   Proof.
@@ -537,12 +548,7 @@ Proof.
   - apply dext_all_henk ; auto.
   - apply dext_A0.
   - apply dext_B0 ; auto.
-  - intros C HC ; subst ; auto. destruct HC.
-    destruct (LEM (w C)) ; auto. exfalso. eapply (dext_nder w _ _ _ _ A B H (S x)) ; auto.
-    exists [C]. repeat split. apply NoDup_cons. intro H2 ; inversion H2. apply NoDup_nil.
-    intros D HD ; inversion HD ; subst. right ; auto. inversion H2.
-    cbn. eapply MP. apply Ax ; eapply A3 ; reflexivity. apply Id. exists x ; exact H0.
-  Unshelve. all: auto.
+  - apply dext_el ; auto.
 Qed.
 
 End DownLind.
