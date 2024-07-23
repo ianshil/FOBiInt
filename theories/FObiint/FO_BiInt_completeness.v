@@ -230,7 +230,7 @@ apply H. apply truth_lemma. apply csq.
 intros. apply truth_lemma ; apply H0 ; auto.
 Qed.
 
-Theorem completeness : forall X A, closed_S X -> closed A ->
+Theorem Completeness : forall X A, closed_S X -> closed A ->
           loc_conseq X A -> FOBIH_prv X A.
 Proof.
 intros X A cstS cstf csq. destruct (SLEM (X |- A)) ; [auto | exfalso].
@@ -238,6 +238,6 @@ apply quasi_completeness in n ; auto.
 Qed.
 
 
-Print Assumptions completeness.
+Print Assumptions Completeness.
 
 End completeness.
