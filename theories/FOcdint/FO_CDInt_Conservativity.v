@@ -116,7 +116,7 @@ Qed.
 
 Variable SLEM : forall P : Prop, P + ~ P.
 
-Theorem conservativity : forall X A, closed_S X -> closed A ->
+Theorem Conservativity : forall X A, closed_S X -> closed A ->
    FOBIH_prv (fun x => exists y, X y /\ x = embed y) (embed A) -> FOCDIH_prv X A.
 Proof.
   intros X A CX CA H. eapply Completeness; eauto.
