@@ -1,6 +1,3 @@
-(** * First-Order Logic *)
-(** ** Syntax *)
-
 Require Import Lia.
 Require Import FunctionalExtensionality.
 Require Import Ensembles.
