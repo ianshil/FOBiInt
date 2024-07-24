@@ -21,8 +21,6 @@ Section FOCDIH.
   Context {Σ_funcs : funcs_signature}.
   Context {Σ_preds : preds_signature}.
 
-  (* **** Definition *)
-
 (* We define here the axioms. *)
 
 Inductive Axioms (F : form) : Prop :=
@@ -35,9 +33,9 @@ Inductive Axioms (F : form) : Prop :=
  | A7 A B : F = (A ∧ B) --> B -> Axioms F
  | A8 A B C : F = (A --> B) --> ((A --> C) --> (A --> (B ∧ C))) -> Axioms F
  | A9 A : F = ⊥ --> A -> Axioms F
- | A10 A B : F =  (∀ (A[↑] --> B)) --> (A --> ∀ B) ->  Axioms F
- | A11 A t : F =  (∀ A) --> A[t..] ->  Axioms F
- | A12 A t : F =  (A[t..] --> ∃ A) ->  Axioms F
+ | QA1 A B : F =  (∀ (A[↑] --> B)) --> (A --> ∀ B) ->  Axioms F
+ | QA2 A t : F =  (∀ A) --> A[t..] ->  Axioms F
+ | QA3 A t : F =  (A[t..] --> ∃ A) ->  Axioms F
  | CD A B : F =  ((∀(A ∨ B[↑])) --> ((∀ A) ∨ B)) ->  Axioms F.
 
 
@@ -65,15 +63,9 @@ match l with
  | h :: t => h ∧ (list_conj t)
 end.
 
-(* Why do I pick a NoDup list? Makes things easier I guess, as I can control the length.
-    Logically I should be able to get rid of it though. *)
-
 Definition pair_der Γ Δ : Prop :=
     exists (l : list form), NoDup l /\ (forall A, List.In A l -> Δ A) /\
         FOCDIH_prv Γ (list_disj l).
-
-Definition complete Γ Δ : Prop :=
-    forall (A : form), Γ A \/ Δ A.
 
 
 End FOCDIH.

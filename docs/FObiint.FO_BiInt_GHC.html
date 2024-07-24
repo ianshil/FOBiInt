@@ -55,9 +55,6 @@
 &nbsp;&nbsp;<span class="id" title="keyword">Context</span> {<a id="390ba1ee029e8777dc2378d46aca0ba0" class="idref" href="#390ba1ee029e8777dc2378d46aca0ba0"><span class="id" title="binder">Σ_preds</span></a> : <a class="idref" href="FObiint.FO_BiInt_Syntax.html#preds_signature"><span class="id" title="class">preds_signature</span></a>}.<br/>
 
 <br/>
-&nbsp;&nbsp;<span class="comment">(*&nbsp;****&nbsp;Definition&nbsp;*)</span><br/>
-
-<br/>
 <span class="comment">(*&nbsp;We&nbsp;define&nbsp;here&nbsp;the&nbsp;axioms.&nbsp;*)</span><br/>
 
 <br/>
@@ -96,9 +93,6 @@
 <span class="comment">(*&nbsp;Define&nbsp;the&nbsp;general&nbsp;notion&nbsp;of&nbsp;derivable&nbsp;pair.&nbsp;*)</span><br/>
 
 <br/>
-<span class="comment">(*&nbsp;Define&nbsp;the&nbsp;general&nbsp;notion&nbsp;of&nbsp;derivable&nbsp;pair.&nbsp;*)</span><br/>
-
-<br/>
 <span class="id" title="keyword">Fixpoint</span> <a id="list_disj" class="idref" href="#list_disj"><span class="id" title="definition">list_disj</span></a> (<a id="l:62" class="idref" href="#l:62"><span class="id" title="binder">l</span></a> : <a class="idref" href="http://coq.inria.fr/doc/V8.19.1/stdlib//Coq.Init.Datatypes.html#list"><span class="id" title="inductive">list</span></a> <a class="idref" href="FObiint.FO_BiInt_Syntax.html#form"><span class="id" title="inductive">form</span></a>) : <a class="idref" href="FObiint.FO_BiInt_Syntax.html#form"><span class="id" title="inductive">form</span></a> :=<br/>
 <span class="id" title="keyword">match</span> <a class="idref" href="FObiint.FO_BiInt_GHC.html#l:62"><span class="id" title="variable">l</span></a> <span class="id" title="keyword">with</span><br/>
 &nbsp;| <a class="idref" href="http://coq.inria.fr/doc/V8.19.1/stdlib//Coq.Init.Datatypes.html#nil"><span class="id" title="constructor">nil</span></a> =&gt; <a class="idref" href="FObiint.FO_BiInt_Syntax.html#ef09877a995fefd0f3b8dfb0cbcc23e1"><span class="id" title="notation">⊥</span></a><br/>
@@ -111,10 +105,6 @@
 &nbsp;| <a class="idref" href="http://coq.inria.fr/doc/V8.19.1/stdlib//Coq.Init.Datatypes.html#nil"><span class="id" title="constructor">nil</span></a> =&gt; <a class="idref" href="FObiint.FO_BiInt_Syntax.html#38343baeb7ac63e7a2a915f26ee5b99b"><span class="id" title="notation">⊤</span></a><br/>
 &nbsp;| <span class="id" title="var">h</span> <a class="idref" href="http://coq.inria.fr/doc/V8.19.1/stdlib//Coq.Init.Datatypes.html#::list_scope:x_'::'_x"><span class="id" title="notation">::</span></a> <span class="id" title="var">t</span> =&gt; <span class="id" title="var">h</span> <a class="idref" href="FObiint.FO_BiInt_Syntax.html#5e35a9ba4dd04d39b8a4e3a59410f6ef"><span class="id" title="notation">∧</span></a> <a class="idref" href="FObiint.FO_BiInt_Syntax.html#5e35a9ba4dd04d39b8a4e3a59410f6ef"><span class="id" title="notation">(</span></a><a class="idref" href="FObiint.FO_BiInt_GHC.html#list_conj:66"><span class="id" title="definition">list_conj</span></a> <span class="id" title="var">t</span><a class="idref" href="FObiint.FO_BiInt_Syntax.html#5e35a9ba4dd04d39b8a4e3a59410f6ef"><span class="id" title="notation">)</span></a><br/>
 <span class="id" title="keyword">end</span>.<br/>
-
-<br/>
-<span class="comment">(*&nbsp;Why&nbsp;do&nbsp;I&nbsp;pick&nbsp;a&nbsp;NoDup&nbsp;list?&nbsp;Makes&nbsp;things&nbsp;easier&nbsp;I&nbsp;guess,&nbsp;as&nbsp;I&nbsp;can&nbsp;control&nbsp;the&nbsp;length.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;Logically&nbsp;I&nbsp;should&nbsp;be&nbsp;able&nbsp;to&nbsp;get&nbsp;rid&nbsp;of&nbsp;it&nbsp;though.&nbsp;*)</span><br/>
 
 <br/>
 <span class="id" title="keyword">Definition</span> <a id="pair_der" class="idref" href="#pair_der"><span class="id" title="definition">pair_der</span></a> <a id="7414bf024cc8a6b3141a135f5f1ab24c" class="idref" href="#7414bf024cc8a6b3141a135f5f1ab24c"><span class="id" title="binder">Γ</span></a> <a id="dd7f4b9f97d73aa8deb78211719d7baa" class="idref" href="#dd7f4b9f97d73aa8deb78211719d7baa"><span class="id" title="binder">Δ</span></a> : <span class="id" title="keyword">Prop</span> :=<br/>

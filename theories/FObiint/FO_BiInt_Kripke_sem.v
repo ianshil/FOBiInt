@@ -1,4 +1,3 @@
-(* * Kripke Semantics *)
 Require Import Coq.Vectors.Vector.
 Local Notation vec := Vector.t.
 Require Import Ensembles.

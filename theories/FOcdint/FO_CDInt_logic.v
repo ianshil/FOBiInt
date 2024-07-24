@@ -13,6 +13,9 @@ Section Logic.
   Context {Σ_funcs : funcs_signature}.
   Context {Σ_preds : preds_signature}.
 
+  Context {eq_dec_preds : EqDec Σ_preds}.
+  Context {eq_dec_funcs : EqDec Σ_funcs}.
+
 (* Variable substituitions preserve provability. *)
 
 Lemma subst_Ax : forall A f, (Axioms A) -> (Axioms A[f]).
@@ -20,13 +23,13 @@ Proof.
 intros A f Ax.
 destruct Ax ; subst ; [ eapply A1 ; reflexivity | eapply A2 ; reflexivity | eapply A3 ; reflexivity |
 eapply A4 ; reflexivity | eapply A5 ; reflexivity | eapply A6 ; reflexivity |
-eapply A7 ; reflexivity | eapply A8 ; reflexivity | eapply A9 ; reflexivity | | | |].
-- apply A10 with (A0[f]) (B[up f]). cbn. rewrite up_form. reflexivity.
-- apply A11 with (A0[up f]) (subst_term f t). cbn. f_equal.
+eapply A7 ; reflexivity | eapply A8 ; reflexivity | eapply A9 ; reflexivity | | | | ].
+- apply QA1 with (A0[f]) (B[up f]). cbn. rewrite up_form. reflexivity.
+- apply QA2 with (A0[up f]) (subst_term f t). cbn. f_equal.
   rewrite subst_comp. unfold funcomp. rewrite subst_comp. unfold funcomp.
   apply subst_ext. intros. destruct n ; simpl ; auto. unfold funcomp. rewrite subst_term_comp.
   rewrite subst_term_id ; auto.
-- apply A12 with (A0[up f]) (subst_term f t). cbn. f_equal.
+- apply QA3 with (A0[up f]) (subst_term f t). cbn. f_equal.
   rewrite subst_comp. unfold funcomp. rewrite subst_comp. unfold funcomp.
   apply subst_ext. intros. destruct n ; cbn ; auto. unfold funcomp. rewrite subst_term_comp.
   rewrite subst_term_id ; auto.
@@ -105,11 +108,11 @@ intros A f resp Ax. revert resp. revert f. destruct Ax ; intros f resp ; subst ;
 [ eapply A1 ; reflexivity | eapply A2 ; reflexivity | eapply A3 ; reflexivity | eapply A4 ; reflexivity |
   eapply A5 ; reflexivity | eapply A6 ; reflexivity | eapply A7 ; reflexivity | eapply A8 ; reflexivity |
   eapply A9 ; reflexivity | | | | ].
-- apply A10 with (A0[f /atom]) (B[f /atom ]).
+- apply QA1 with (A0[f /atom]) (B[f /atom ]).
   repeat rewrite atom_subst_comp_strong ; auto.
-- apply A11 with (A0[f /atom ]) t.
+- apply QA2 with (A0[f /atom ]) t.
   rewrite atom_subst_comp_strong ; auto.
-- apply A12 with (A0[f /atom ]) t.
+- apply QA3 with (A0[f /atom ]) t.
   rewrite atom_subst_comp_strong ; auto.
 - apply CD with (A0[f /atom]) (B[f /atom ]).
   repeat rewrite atom_subst_comp_strong ; auto.

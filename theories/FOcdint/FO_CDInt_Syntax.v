@@ -1,11 +1,8 @@
 Require Import Lia.
-Require Import FunctionalExtensionality.
 Require Import Ensembles.
 Require Import Coq.Vectors.Vector.
 Local Notation vec := t.
-From Equations Require Import Equations.
-
-Require Export FO_BiInt_Syntax.
+From Equations Require Export Equations.
 
 
 
@@ -21,6 +18,16 @@ Definition funcomp {X Y Z} (g : Y -> Z) (f : X -> Y)  :=
 
 (* Signatures are a record to allow for easier definitions of general transformations on signatures *)
 
+Class funcs_signature :=
+  { syms : Type; ar_syms : syms -> nat }.
+
+Coercion syms : funcs_signature >-> Sortclass.
+
+Class preds_signature :=
+  { preds : Type; ar_preds : preds -> nat }.
+
+Coercion preds : preds_signature >-> Sortclass.
+
 Section fix_signature.
 
   Context {Σ_funcs : funcs_signature}.
@@ -31,7 +38,6 @@ Section fix_signature.
 
   Inductive term  : Type :=
   | var : nat -> term
-  | cst : nat -> term
   | func : forall (f : syms), vec term (ar_syms f) -> term.
 
   Set Elimination Schemes.
@@ -39,7 +45,6 @@ Section fix_signature.
   Fixpoint subst_term (σ : nat -> term) (t : term) : term :=
     match t with
     | var n => σ n
-    | cst n => cst n
     | func f v => func f (map (subst_term σ) v)
     end.
 
@@ -48,7 +53,7 @@ Section fix_signature.
   (* Syntax is parametrised in binary operators and quantifiers.
       Most developments will fix these types in the beginning and never change them.
    *)
-
+  Class operators := {binop : Type ; quantop : Type}.
   Context {ops : operators}.
 
   Inductive form : Type :=
@@ -75,7 +80,6 @@ End fix_signature.
 (* We can write term both with and without arguments, but printing is without. *)
 Arguments term _, {_}.
 Arguments var _ _, {_} _.
-Arguments cst _ _, {_} _.
 Arguments func _ _ _, {_} _ _.
 Arguments subst_term {_} _ _.
 
@@ -98,7 +102,6 @@ Declare Scope subst_scope.
 Open Scope subst_scope.
 
 Notation "$ x" := (var x) (at level 3, format "$ '/' x") : subst_scope.
-Notation "# x" := (cst x) (at level 3, format "# '/' x") : subst_scope.
 Notation "t `[ sigma ]" := (subst_term sigma t) (at level 7, left associativity, format "t '/' `[ sigma ]") : subst_scope.
 Notation "phi [ sigma ]" := (subst_form sigma phi) (at level 7, left associativity, format "phi '/' [ sigma ]") : subst_scope.
 Notation "s .: sigma" := (scons s sigma) (at level 70, right associativity) : subst_scope.
@@ -135,7 +138,7 @@ Module FullSyntax.
   Notation "A ∨ B" := (@bin _ _ full_operators Disj A B) (at level 42) : syn.
   Notation "A '-->' B" := (@bin _ _ full_operators Impl A B) (at level 43, right associativity) : syn.
   Notation "⊥" := (bot) : syn.
-  Notation "⊤" := (bot --> bot) : syn.
+  Notation "⊤" := (⊥ --> ⊥) : syn.
   Notation "¬ A" := (A --> ⊥) (at level 42) : syn.
   Notation "A '<-->' B" := ((A --> B) ∧ (B --> A)) (at level 43) : syn.
 
@@ -167,32 +170,29 @@ Section fix_signature.
   Hint Constructors vec_in : core.
 
   Lemma term_rect' (p : term -> Type) :
-    (forall x, p (var x)) -> (forall x, p (cst x)) -> (forall F v, (Forall p v) -> p (func F v)) -> forall (t : term), p t.
+    (forall x, p (var x)) -> (forall F v, (Forall p v) -> p (func F v)) -> forall (t : term), p t.
   Proof.
-    intros f1 f3 f2. fix strong_term_ind' 1. destruct t as [n| c | F v].
+    intros f1 f2. fix strong_term_ind' 1. destruct t as [n | F v].
     - apply f1.
-    - apply f3.
     - apply f2. induction v.
       + econstructor.
       + econstructor. now eapply strong_term_ind'. eauto.
   Qed.
 
   Lemma term_rect (p : term -> Type) :
-    (forall x, p (var x)) -> (forall x, p (cst x)) -> (forall F v, (forall t, vec_in t v -> p t) -> p (func F v)) -> forall (t : term), p t.
+    (forall x, p (var x)) -> (forall F v, (forall t, vec_in t v -> p t) -> p (func F v)) -> forall (t : term), p t.
   Proof.
-    intros f1 f3 f2. eapply term_rect'.
+    intros f1 f2. eapply term_rect'.
     - apply f1.
-    - apply f3.
     - intros. apply f2. intros t. induction 1; inversion X; subst; eauto.
       apply Eqdep_dec.inj_pair2_eq_dec in H2; subst; eauto. decide equality.
   Qed.
 
   Lemma term_ind (p : term -> Prop) :
-    (forall x, p (var x)) -> (forall x, p (cst x)) -> (forall F v (IH : forall t, In t v -> p t), p (func F v)) -> forall (t : term), p t.
+    (forall x, p (var x)) -> (forall F v (IH : forall t, In t v -> p t), p (func F v)) -> forall (t : term), p t.
   Proof.
-    intros f1 f3 f2. eapply term_rect'.
+    intros f1 f2. eapply term_rect'.
     - apply f1.
-    - apply f3.
     - intros. apply f2. intros t. induction 1 ; inversion X; subst; eauto.
       apply Eqdep_dec.inj_pair2_eq_dec in H3; subst; eauto. decide equality.
   Qed.
@@ -202,21 +202,19 @@ Inductive InTv {A : Type} (a : A) : forall n : nat, vec A n -> Type :=
   | InTv_cons_tl : forall (m : nat) (x : A) (v : vec A m), InTv a m v -> InTv a (S m) (cons A x m v).
 
    Lemma term_indT (p : term -> Type) :
-    (forall x, p (var x)) -> (forall x, p (cst x)) -> (forall F v (IH : forall t, InTv t (ar_syms F) v -> p t), p (func F v)) -> forall (t : term), p t.
+    (forall x, p (var x)) -> (forall F v (IH : forall t, InTv t (ar_syms F) v -> p t), p (func F v)) -> forall (t : term), p t.
   Proof.
-    intros f1 f3 f2. eapply term_rect'.
+    intros f1 f2. eapply term_rect'.
     - apply f1.
-    - apply f3.
     - intros. apply f2. intros t. induction 1 ; inversion X; subst; eauto.
       apply Eqdep_dec.inj_pair2_eq_dec in H2; subst; eauto. decide equality.
   Qed.
 
 Lemma strong_term_ind' (p : term -> Type) :
-    (forall x, p (var x)) -> (forall x, p (cst x)) -> (forall F v, (Forall p v) -> p (func F v)) -> forall (t : term), p t.
+    (forall x, p (var x)) -> (forall F v, (Forall p v) -> p (func F v)) -> forall (t : term), p t.
 Proof.
-  intros f1 f3 f2. fix strong_term_ind' 1. destruct t as [n| c |F v].
+  intros f1 f2. fix strong_term_ind' 1. destruct t as [n| F v].
   - apply f1.
-  - apply f3.
   - apply f2. induction v.
     + econstructor.
     + econstructor. now eapply strong_term_ind'. eauto.
@@ -232,11 +230,10 @@ Ltac inv H :=
   inversion H; subst; resolve_existT.
 
 Lemma strong_term_ind (p : term -> Type) :
-     (forall x, p ($x)) -> (forall x, p (#x)) ->(forall F v, (forall t, vec_in t v -> p t) -> p (func F v)) -> forall (t : term), p t.
+     (forall x, p ($x)) -> (forall F v, (forall t, vec_in t v -> p t) -> p (func F v)) -> forall (t : term), p t.
 Proof.
-intros f1 f3 f2. eapply strong_term_ind'.
+intros f1 f2. eapply strong_term_ind'.
 - apply f1.
-- apply f3.
 - intros. apply f2. intros t. induction 1 ; inv X ; eauto.
 Qed.
 
@@ -275,11 +272,11 @@ Qed.
       (forall (q : quantop) (f2 : form), (forall sigma, P (subst_form sigma f2)) -> P (quant q f2)) ->
       forall (f4 : form), P f4.
   Proof.
-    intros P H1 H2 H3 H4 phi. induction phi using (@size_ind _ size). destruct phi.
+    intros P H1 H3 H4 H5 phi. induction phi using (@size_ind _ size). destruct phi.
     - apply H1.
-    - apply H2.
-    - apply H3; apply H; cbn; lia.
-    - apply H4. intros sigma. apply H. cbn. rewrite subst_size. lia.
+    - apply H3.
+    - apply H4; apply H; cbn; lia.
+    - apply H5. intros sigma. apply H. cbn. rewrite subst_size. lia.
   Qed.
 
 End fix_signature.
@@ -420,22 +417,28 @@ Section Subst.
     - apply subst_term_shift.
   Qed.
 
+  Lemma form_subst_help phi :
+    phi[up ↑][$0..] = phi.
+  Proof.
+    rewrite subst_comp. apply subst_id. now intros [].
+  Qed.
+
 End Subst.
 
 Section EqDec.
 
-  Context {Σ_funcs : funcs_signature}.
-  Context {Σ_preds : preds_signature}.
+Context {Σ_funcs : funcs_signature}.
+Context {Σ_preds : preds_signature}.
 
-Parameter eq_dec_preds : forall x y : preds, {x = y}+{x <> y}.
-Parameter eq_dec_funcs : forall x y : Σ_funcs, {x = y}+{x <> y}.
+Context {eq_dec_preds : EqDec Σ_preds}.
+Context {eq_dec_funcs : EqDec Σ_funcs}.
 
 Lemma func_inv : forall f t0 t1, func f t0 = func f t1 -> t0 = t1.
 Proof.
 intros. inversion H; subst; try
   match goal with
      | [ H2 : @existT ?X _ _ _ = existT _ _ _ |- _ ] => eapply Eqdep_dec.inj_pair2_eq_dec in H2; [subst | try (eauto || now intros; decide equality)]
-  end. auto. intros. apply eq_dec_funcs.
+  end. auto.
 Qed.
 
 Lemma atom_inv : forall P v0 v1, atom P v0 = atom P v1 -> v0 = v1.
@@ -443,7 +446,7 @@ Proof.
 intros. inversion H; subst; try
   match goal with
      | [ H2 : @existT ?X _ _ _ = existT _ _ _ |- _ ] => eapply Eqdep_dec.inj_pair2_eq_dec in H2; [subst | try (eauto || now intros; decide equality)]
-  end. auto. intros. apply eq_dec_preds.
+  end. auto.
 Qed.
 
 Lemma eq_dec_nat : forall x y : nat, {x = y}+{x <> y}.
@@ -497,11 +500,8 @@ Proof.
 pose (term_indT (fun x => forall y : term, {x = y} + {x <> y})).
 apply s ; clear s.
 - intros. destruct y ; auto. destruct (eq_dec_nat x n) ; subst ; auto. right.
-  intro. inversion H ; auto. right ; congruence. right. intro. inversion H.
-- intros. destruct y ; auto. right ; congruence. destruct (eq_dec_nat x n) ; subst ; auto. right.
-  intro. inversion H ; auto. right. intro. inversion H.
+  intro. inversion H ; auto. right ; congruence.
 - intros. destruct y.
-  * right. intro. inversion H.
   * right. intro. inversion H.
   * pose (eq_dec_funcs F f). destruct s.
     + subst. pose (eq_dec_preserved_vector term (ar_syms f) v IH).
@@ -526,10 +526,24 @@ induction x ; destruct y ; auto.
 - destruct b ; destruct b0 ; auto.
   2-4: right ; intro ; inversion H.
   3-5: right ; intro ; inversion H.
-  all: destruct (IHx1 y1) ; destruct (IHx2 y2) ; subst ; auto ; right ; intro ; inversion H ; auto.
+  1-3: destruct (IHx1 y1) ; destruct (IHx2 y2) ; subst ; auto ; right ; intro ; inversion H ; auto.
 - destruct q ; destruct q0 ; subst. 2-3: right ; intro ; inversion H.
   1-2: destruct (IHx y) ; subst ; auto ; right ; intro ; inversion H ; auto.
 Qed.
+
+  Lemma form_all phi :
+    { psi | phi = ∀ psi } + (~ exists psi, phi = ∀ psi).
+  Proof.
+    destruct phi; try destruct q. 1-3,5: right; intros [psi H]; discriminate.
+    left. exists phi. reflexivity.
+  Qed.
+
+  Lemma form_ex phi :
+    { psi | phi = ∃ psi } + (~ exists psi, phi = ∃ psi).
+  Proof.
+    destruct phi; try destruct q. 1-4: right; intros [psi H]; discriminate.
+    left. exists phi. reflexivity.
+  Qed.
 
 End EqDec.
 

@@ -1,4 +1,3 @@
-(* * Kripke Semantics *)
 Require Import Coq.Vectors.Vector.
 Local Notation vec := Vector.t.
 Require Import Ensembles.
@@ -8,8 +7,6 @@ Require Import FO_CDInt_Syntax.
 Local Set Implicit Arguments.
 Local Unset Strict Implicit.
 
-Require Export FO_BiInt_Kripke_sem.
-
 Section Semantics.
 
   Context {Σ_funcs : funcs_signature}.
@@ -17,34 +14,33 @@ Section Semantics.
 
     Variable domain : Type.
 
+    Class interp := B_I
+      {
+        i_func : forall f : syms, vec domain (ar_syms f) -> domain
+      }.
+
     Definition env := nat -> domain.
 
-    Definition ass := nat -> domain.
-    Existing Class ass.
+    Context {I : interp}.
 
-    Context {I : interp domain}.
-
-    Fixpoint eval (rho : env) {alpha : ass} (t : term) : domain :=
+    Fixpoint eval (rho : env) (t : term) : domain :=
       match t with
       | var s => rho s
-      | cst s => alpha s
       | func f v => i_func (Vector.map (eval rho) v)
       end.
 
-Lemma eval_ext rho alpha xi t :
-      (forall x, rho x = xi x) -> @eval rho alpha t = @eval xi alpha t.
+Lemma eval_ext rho xi t :
+      (forall x, rho x = xi x) -> @eval rho t = @eval xi t.
     Proof.
       intros H. induction t; cbn.
       - now apply H.
-      - reflexivity.
       - f_equal. apply map_ext_in. now apply IH.
     Qed.
 
-Lemma eval_comp rho alpha xi t :
-      @eval rho alpha (subst_term xi t) = @eval (xi >> @eval rho alpha) alpha t.
+Lemma eval_comp rho xi t :
+      @eval rho (subst_term xi t) = @eval (xi >> @eval rho) t.
     Proof.
       induction t; cbn.
-      - reflexivity.
       - reflexivity.
       - f_equal. rewrite map_map. apply map_ext_in, IH.
     Qed.
@@ -59,13 +55,26 @@ Section Kripke.
   Section Model.
 
     Variable domain : Type.
-    Variable alpha : ass (domain).
 
-    Variable M : kmodel domain.
+    Class kmodel :=
+      {
+        nodes : Type ;
+
+        reachable : nodes -> nodes -> Prop ;
+        reach_refl u : reachable u u ;
+        reach_tran u v w : reachable u v -> reachable v w -> reachable u w ;
+
+        k_interp : interp domain ;
+        k_P : nodes -> forall P : preds, Vector.t domain (ar_preds P) -> Prop ;
+
+        mon_P : forall u v, reachable u v -> forall P (t : Vector.t domain (ar_preds P)), k_P u t -> k_P v t;
+      }.
+
+    Variable M : kmodel.
 
 Fixpoint ksat u (rho : nat -> domain) (phi : form) : Prop :=
       match phi with
-      | atom P v => k_P u (Vector.map (@eval (*_*) _ domain (@k_interp _ _ domain M) rho alpha) v)
+      | atom P v => k_P u (Vector.map (@eval (*_*) _ domain k_interp rho) v)
       | bot => False
       | bin Conj psi chi => (ksat u rho psi) /\ (ksat u rho chi)
       | bin Disj psi chi => (ksat u rho psi) \/ (ksat u rho chi)
@@ -74,7 +83,7 @@ Fixpoint ksat u (rho : nat -> domain) (phi : form) : Prop :=
       | quant Ex phi => exists j : domain, ksat u (j .: rho) phi
       end.
 
-    Lemma ksat_mon u (rho : nat -> domain) (phi : form) :
+    Lemma ksat_mon (u : nodes) (rho : nat -> domain) (phi : form) :
       forall v (H : reachable u v), ksat u rho phi -> ksat v rho phi.
     Proof.
       revert rho.
@@ -98,16 +107,15 @@ Fixpoint ksat u (rho : nat -> domain) (phi : form) : Prop :=
 
   End Model.
 
-  Notation " rho '⊩(' u ')'  phi" := (@ksat _ _ _ u rho phi) (at level 20).
-  Notation " rho '⊩(' u , M ')' phi" := (@ksat _ _ M u rho phi) (at level 20).
-  Arguments ksat {_ _ _} _ _ _.
+  Notation " rho '⊩(' u ')'  phi" := (@ksat _ _ u rho phi) (at level 20).
+  Notation " rho '⊩(' u , M ')' phi" := (@ksat _ M u rho phi) (at level 20).
+  Arguments ksat {_ _} _ _ _.
 
   Hint Resolve reach_refl : core.
 
   Section Substs.
 
     Variable D : Type.
-    Variable alpha : ass D.
     Context {M : kmodel D}.
 
 Ltac comp := repeat (progress (cbn in *; autounfold in *)).
@@ -129,7 +137,7 @@ Ltac comp := repeat (progress (cbn in *; autounfold in *)).
     Qed.
 
     Lemma ksat_comp u rho xi phi :
-      rho ⊩(u,M) phi[xi] <-> (xi >> eval rho (I := @k_interp _ _ _ M)) ⊩(u,M) phi.
+      rho ⊩(u,M) phi[xi] <-> (xi >> eval rho (I := @k_interp _ M)) ⊩(u,M) phi.
     Proof.
       induction phi as [ | b P | | ] in rho, xi, u |-*; comp ; try tauto.
       - erewrite Vector.map_map. erewrite Vector.map_ext. reflexivity. apply eval_comp.
@@ -146,18 +154,18 @@ Ltac comp := repeat (progress (cbn in *; autounfold in *)).
 Section Conseq_Rel.
 
 Definition loc_conseq Γ A :=
-  forall D (alpha : ass D) (M : kmodel D) u rho,
+  forall D (M : kmodel D) u rho,
      (forall B, In _ Γ B -> (ksat u rho B)) ->
      (ksat u rho A).
 
    Definition kvalid_ctx A phi :=
-    forall D (alpha : ass D) (M : kmodel D) u rho, (forall psi, In _ A psi -> ksat u rho psi) -> ksat u rho phi.
+    forall D (M : kmodel D) u rho, (forall psi, In _ A psi -> ksat u rho psi) -> ksat u rho phi.
 
   Definition kvalid phi :=
-    forall D (alpha : ass D) (M : kmodel D) u rho, ksat u rho phi.
+    forall D (M : kmodel D) u rho, ksat u rho phi.
 
   Definition ksatis phi :=
-    exists D (alpha : ass D) (M : kmodel D) u rho, ksat u rho phi.
+    exists D (M : kmodel D) u rho, ksat u rho phi.
 
 End Conseq_Rel.
 
@@ -166,7 +174,7 @@ End Kripke.
 
   Notation " rho '⊩(' u ')'  phi" := (@ksat _ _ _ u rho phi) (at level 20).
   Notation " rho '⊩(' u , M ')' phi" := (@ksat _ _ M u rho phi) (at level 20).
-  Arguments ksat {_ _ _ _ _} _ _ _.
+  Arguments ksat {_ _ _ _} _ _ _.
 
 
 

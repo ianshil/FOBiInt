@@ -21,8 +21,6 @@ Section FOBIH.
   Context {Σ_funcs : funcs_signature}.
   Context {Σ_preds : preds_signature}.
 
-  (* **** Definition *)
-
 (* We define here the axioms. *)
 
 Inductive Axioms (F : form) : Prop :=
@@ -56,8 +54,6 @@ Inductive FOBIH_prv : (form -> Prop) -> form -> Prop :=
 
 (* Define the general notion of derivable pair. *)
 
-(* Define the general notion of derivable pair. *)
-
 Fixpoint list_disj (l : list form) : form :=
 match l with
  | nil => ⊥
@@ -69,9 +65,6 @@ match l with
  | nil => ⊤
  | h :: t => h ∧ (list_conj t)
 end.
-
-(* Why do I pick a NoDup list? Makes things easier I guess, as I can control the length.
-    Logically I should be able to get rid of it though. *)
 
 Definition pair_der Γ Δ : Prop :=
     exists (l : list form), NoDup l /\ (forall A, List.In A l -> Δ A) /\

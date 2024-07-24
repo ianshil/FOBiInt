@@ -11,6 +11,9 @@ Section Remove.
   Context {Σ_funcs : funcs_signature}.
   Context {Σ_preds : preds_signature}.
 
+  Context {eq_dec_preds : EqDec Σ_preds}.
+  Context {eq_dec_funcs : EqDec Σ_funcs}.
+
 Lemma In_dec : forall l (a : form) , (In a l) + ((In a l) -> False).
 Proof.
 induction l.
