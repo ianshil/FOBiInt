@@ -65,6 +65,10 @@ Fixpoint embed (phi : form) : form' :=
   | quant q phi => FO_BiInt_Syntax.quant (embed_quant q) (embed phi)
   end.
 
+(* We can port the notion of embedding to sets of formulas. *)
+
+Definition embed_S (X : form -> Prop) := fun x => exists y, X y /\ x = embed y.
+
 (* Delete the following once we have the enumeration of formulas. *)
 
 Variable form_enum : nat -> form.
@@ -117,7 +121,7 @@ Qed.
 Variable SLEM : forall P : Prop, P + ~ P.
 
 Theorem Conservativity : forall X A, closed_S X -> closed A ->
-   FOBIH_prv (fun x => exists y, X y /\ x = embed y) (embed A) -> FOCDIH_prv X A.
+   FOBIH_prv (embed_S X) (embed A) -> FOCDIH_prv X A.
 Proof.
   intros X A CX CA H. eapply Completeness; eauto.
   intros D M w rho H1. apply embed_ksat; trivial. apply Soundness in H. apply H.
