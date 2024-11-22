@@ -49,7 +49,7 @@ Proof.
 intros A f Ax.
 destruct Ax ; subst ; [ eapply A1 ; reflexivity | eapply A2 ; reflexivity | eapply A3 ; reflexivity |
 eapply A4 ; reflexivity | eapply A5 ; reflexivity | eapply A6 ; reflexivity |
-eapply A7 ; reflexivity | eapply A8 ; reflexivity | eapply A9 ; reflexivity | eapply A10 ; reflexivity |
+eapply A7 ; reflexivity | eapply A8 ; reflexivity | eapply A9 ; reflexivity |
 eapply BA1 ; reflexivity | eapply BA2 ; reflexivity | eapply BA3 ; reflexivity | eapply BA4 ; reflexivity | | | ].
 - apply QA1 with (A0[f]) (B[up f]). cbn. rewrite up_form. reflexivity.
 - apply QA2 with (A0[up f]) (subst_term f t). cbn. f_equal.
@@ -118,7 +118,7 @@ Proof.
 intros A f resp Ax. revert resp. revert f. destruct Ax ; intros f resp ; subst ; cbn ;
 [ eapply A1 ; reflexivity | eapply A2 ; reflexivity | eapply A3 ; reflexivity |
 eapply A4 ; reflexivity | eapply A5 ; reflexivity | eapply A6 ; reflexivity |
-eapply A7 ; reflexivity | eapply A8 ; reflexivity | eapply A9 ; reflexivity | eapply A10 ; reflexivity |
+eapply A7 ; reflexivity | eapply A8 ; reflexivity | eapply A9 ; reflexivity |
 eapply BA1 ; reflexivity | eapply BA2 ; reflexivity | eapply BA3 ; reflexivity | eapply BA4 ; reflexivity | | | ].
 - apply QA1 with (A0[f /atom]) (B[f /atom ]).
   repeat rewrite atom_subst_comp_strong ; auto.

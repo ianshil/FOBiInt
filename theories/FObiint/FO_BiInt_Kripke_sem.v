@@ -76,7 +76,6 @@ Fixpoint ksat u (rho : nat -> domain) (phi : form) : Prop :=
       match phi with
       | atom P v => k_P u (Vector.map (@eval (*_*) _ domain k_interp rho) v)
       | bot => False
-      | top => True
       | bin Conj psi chi => (ksat u rho psi) /\ (ksat u rho chi)
       | bin Disj psi chi => (ksat u rho psi) \/ (ksat u rho chi)
       | bin Impl psi chi => forall v, reachable u v -> ksat v rho psi -> ksat v rho chi
@@ -125,7 +124,7 @@ Ltac comp := repeat (progress (cbn in *; autounfold in *)).
     Lemma ksat_ext u rho xi phi :
       (forall x, rho x = xi x) -> rho ⊩(u,M) phi <-> xi ⊩(u,M) phi.
     Proof.
-      induction phi as [ | |  | | ] in rho, xi, u |-* ; intros Hext ; comp ; try tauto.
+      induction phi as [ |  | | ] in rho, xi, u |-* ; intros Hext ; comp ; try tauto.
       - erewrite Vector.map_ext. reflexivity. intros a. now apply eval_ext.
       - destruct b; split.
         * intro ; destruct H ; split ; [apply (IHphi1 u rho xi Hext) ; auto  |  apply (IHphi2 u rho xi Hext) ; auto].
@@ -145,7 +144,7 @@ Ltac comp := repeat (progress (cbn in *; autounfold in *)).
     Lemma ksat_comp u rho xi phi :
       rho ⊩(u,M) phi[xi] <-> (xi >> eval rho (I := @k_interp _ M)) ⊩(u,M) phi.
     Proof.
-      induction phi as [ | | b P | | ] in rho, xi, u |-*; comp ; try tauto.
+      induction phi as [ | b P | | ] in rho, xi, u |-*; comp ; try tauto.
       - erewrite Vector.map_map. erewrite Vector.map_ext. reflexivity. apply eval_comp.
       - destruct b. 1-4: setoid_rewrite IHphi1 ; now setoid_rewrite IHphi2.
       - destruct q ; setoid_rewrite IHphi. split; intros H d; eapply ksat_ext. 2, 4: apply (H d).

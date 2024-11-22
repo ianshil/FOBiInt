@@ -33,7 +33,6 @@ Inductive Axioms (F : form) : Prop :=
  | A7 A B : F = (A ∧ B) --> B -> Axioms F
  | A8 A B C : F = (A --> B) --> ((A --> C) --> (A --> (B ∧ C))) -> Axioms F
  | A9 A : F = ⊥ --> A -> Axioms F
- | A10 A : F = A --> ⊤ -> Axioms F
  | BA1 A B : F= A --> (B ∨ (A --< B)) -> Axioms F
  | BA2 A B : F = (A --< B) --> ∞ (A --> B) -> Axioms F
  | BA3 A B C : F = ((A --< B) --< C) --> (A --< (B ∨ C)) -> Axioms F

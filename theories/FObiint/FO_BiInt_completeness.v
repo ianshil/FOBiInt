@@ -138,8 +138,6 @@ apply i ; clear i ; auto.
 - intros cw. split ; intro.
   * inversion H.
   * simpl in *. apply cconsist. apply Id ; auto.
-(* ⊤ *)
-- intros cw. split ; intro ; simpl in * ; auto. apply cded_clos ; apply prv_Top.
 (* atom *)
 - intros P t cw. split ; intros ; simpl in * ; [ rewrite universal_interp_eval0 in H ; auto | rewrite universal_interp_eval0 ; auto].
 (* Binary connectives *)

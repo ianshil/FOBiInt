@@ -131,7 +131,6 @@ Qed.
 
 Inductive unused (n : nat) : form -> Prop :=
 | uf_bot : unused n bot
-| uf_top : unused n top
 | uf_atom P v : (forall t, Vector.In t v -> unused_term n t) -> unused n (atom P v)
 | uf_bin op phi psi : unused n phi -> unused n psi -> unused n (bin op phi psi)
 | uf_quant q phi : unused (S n) phi -> unused n (quant q phi).
@@ -180,7 +179,7 @@ Qed.
 Lemma unused_list_conj : forall n l, (forall A, List.In A l -> unused n A) -> unused n (list_conj l).
 Proof.
 induction l.
-- intros. simpl. apply uf_top.
+- intros. simpl. apply uf_bin ; apply uf_bot.
 - intros. simpl. apply uf_bin. apply H. apply in_eq. apply IHl. intros. apply H. apply in_cons ; auto.
 Qed.
 
@@ -314,7 +313,6 @@ Lemma form_unused : forall (A : form), (exists n, (unused n A) /\ forall m, n <=
 Proof.
 intros. induction A.
 - exists 0. split. apply uf_bot. intros. apply uf_bot.
-- exists 0. split. apply uf_top. intros. apply uf_top.
 - pose (VectorDef.to_list t).
   assert (forall t : term, List.In t l -> exists m : nat, unused_term m t /\ (forall n, m <= n -> unused_term n t)).
   intros. apply term_infinite_unused. apply max_list_infinite_unused in H. destruct H. exists x. split.
@@ -508,7 +506,7 @@ Lemma unused_after_subst phi sigma y :
 Proof.
   revert sigma y.
   induction phi.
-  1-2: intros sigma y H ; constructor.
+  intros sigma y H ; constructor.
   - intros sigma y H. constructor. intros t0 H0. apply VectorIn_vec_in_term, vec_in_map in H0.
     destruct H0 as (t1 & H1 & H2) ; subst. apply unused_term_after_subst.
     intros. destruct (H x) ; auto. left. inv H0.  apply H3. apply vec_in_VectorIn_term ; auto.
@@ -542,9 +540,6 @@ induction n ; cbn ; intros m Γ Δ HΓ HΔ H A HA.
         -- apply uf_bot.
      * destruct H0 as [H0 | (H0 & H1)] ; subst.
         -- apply (IHn m Γ Δ) ; auto. lia. left ; auto.
-        -- apply uf_top.
-     * destruct H0 as [H0 | (H0 & H1)] ; subst.
-        -- apply (IHn m Γ Δ) ; auto. lia. left ; auto.
         -- apply form_enum_unused with n ; auto. lia.
      * destruct H0 as [H0 | (H0 & H1)] ; subst.
         -- apply (IHn m Γ Δ) ; auto. lia. left ; auto.
@@ -568,9 +563,6 @@ induction n ; cbn ; intros m Γ Δ HΓ HΔ H A HA.
      * destruct H0 as [H0 | (H0 & H1)] ; subst.
         -- apply (IHn m Γ Δ) ; auto. lia. right ; auto.
         -- apply uf_bot.
-     * destruct H0 as [H0 | (H0 & H1)] ; subst.
-        -- apply (IHn m Γ Δ) ; auto. lia. right ; auto.
-        -- apply uf_top.
      * destruct H0 as [H0 | (H0 & H1)] ; subst.
         -- apply (IHn m Γ Δ) ; auto. lia. right ; auto.
         -- apply form_enum_unused with n ; auto. lia.
@@ -617,21 +609,6 @@ induction n ; intros Γ Δ ClΓ ClΔ ; intros.
      intros. assert (List.In A x). apply in_remove in H4. destruct H4. auto.
      apply H1 in H5. inversion H5 ; auto. destruct H6 ; destruct H7 ; subst. exfalso. apply remove_not_in_anymore in H4. auto.
      apply der_list_disj_bot. auto.
-    (* Top *)
-    * simpl in H2.
-      assert ((fun x : form =>  (fst (nextension_theory Γ Δ n)) x \/
-      (pair_der (Union form (fst (nextension_theory Γ Δ n)) (Singleton form ⊤)) (snd (nextension_theory Γ Δ n)) -> False) /\ x = ⊤) =
-      Union _  (fst (nextension_theory Γ Δ n)) (Singleton _ ⊤)).
-      apply Extensionality_Ensembles. split ; intro ; intro. inversion H3 ; auto. apply Union_introl.
-      auto. destruct H4. subst. apply Union_intror. apply In_singleton. unfold In. inversion H3 ; auto. subst.
-      right. inversion H4. split ; auto. subst. intro. apply (IHn _ _ ClΓ ClΔ H). destruct H5. destruct H5. destruct H6.
-      exists x0. repeat split ; auto. simpl in H7.
-      eapply MP. apply (FOBIH_Deduction_Theorem _ _ _ H7) ; auto. apply prv_Top.
-      rewrite H3 in H2. clear H3. exists x. repeat split ; auto. intros. apply H1 in H3. simpl in H3. inversion H3 ; auto. destruct H4 ; subst.
-      exfalso. apply (IHn _ _ ClΓ ClΔ H). destruct H4. destruct H4. destruct H5.
-      exists x0. repeat split ; auto. simpl in H6.
-      eapply MP. apply (FOBIH_Deduction_Theorem _ _ _ H6) ; auto. apply prv_Top.
-      eapply MP . apply (FOBIH_Deduction_Theorem _ _ _ H2) ; auto. apply prv_Top.
     (* Atom *)
     * cbn in *. destruct (LEM (pair_der (Union form (fst (nextension_theory Γ Δ n)) (Singleton form (atom P t))) (snd (nextension_theory Γ Δ n)))).
       { assert ((fun x : form =>  (fst (nextension_theory Γ Δ n)) x \/
@@ -794,13 +771,6 @@ destruct A ; cbn.
 - right. right. split ; auto. exists []. repeat split ; auto.
   apply NoDup_nil. intros. inversion H2. cbn. apply Id. right.
   apply In_singleton.
-- simpl. left. unfold In. right. repeat split ; auto. intros.
-  apply (Under_nextension_theory (form_index ⊤) _ _ H H0 H1).
-  assert (pair_der ((fst (nextension_theory Γ Δ (form_index ⊤)))) (Union form (snd (nextension_theory Γ Δ (form_index ⊤))) (Singleton form ⊤))).
-  exists [⊤]. repeat split ; auto. apply NoDup_cons. intro. inversion H3. apply NoDup_nil.
-  intros. inversion H3. apply Union_intror. subst. apply In_singleton. inversion H4.
-  simpl. eapply MP. apply Ax ; eapply A3 ; reflexivity. apply prv_Top.
-  pose (Cut _ _ _ H2 H3). auto.
 - cbn. destruct (LEM (pair_der (Union form (fst (nextension_theory Γ Δ (form_index (atom P t)))) (Singleton form (atom P t))) (snd (nextension_theory Γ Δ (form_index (atom P t)))))).
   right. unfold In. right. repeat split ; auto. unfold In. left. right. split ; auto.
 - cbn. destruct (LEM (pair_der (Union form (fst (nextension_theory Γ Δ (form_index (bin b A1 A2)))) (Singleton form (bin b A1 A2))) (snd (nextension_theory Γ Δ (form_index (bin b A1 A2)))))).

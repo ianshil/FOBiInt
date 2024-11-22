@@ -58,7 +58,6 @@ Section fix_signature.
 
   Inductive form : Type :=
   | bot : form
-  | top : form
   | atom : forall (P : preds), vec term (ar_preds P) -> form
   | bin : binop -> form -> form -> form
   | quant : quantop -> form -> form.
@@ -68,7 +67,6 @@ Section fix_signature.
   Fixpoint subst_form (σ : nat -> term) (phi : form) : form :=
     match phi with
     | bot => bot
-    | top => top
     | atom P v => atom P (map (subst_term σ) v)
     | bin op phi1 phi2 => bin op (subst_form σ phi1) (subst_form σ phi2)
     | quant op phi => quant op (subst_form (up σ) phi)
@@ -142,7 +140,7 @@ Module FullSyntax.
   Notation "A '-->' B" := (@bin _ _ full_operators Impl A B) (at level 43, right associativity) : syn.
   Notation "A '--<' B" := (@bin _ _ full_operators Excl A B) (at level 43, right associativity) : syn.
   Notation "⊥" := (bot) : syn.
-  Notation "⊤" := (top) : syn.
+  Notation "⊤" := (⊥ --> ⊥) : syn.
   Notation "¬ A" := (A --> ⊥) (at level 42) : syn.
   Notation "∞ A" := (⊤ --< A) (at level 42) : syn.
   Notation "A '<-->' B" := ((A --> B) ∧ (B --> A)) (at level 43) : syn.
@@ -258,7 +256,6 @@ Qed.
     match phi with
     | atom _ _ => 0
     | bot => 0
-    | top => 0
     | bin b phi psi => S (size phi + size psi)
     | quant q phi => S (size phi)
     end.
@@ -282,15 +279,14 @@ Qed.
 
   Lemma form_ind_subst :
     forall P : form -> Prop,
-      P bot ->  P top ->
+      P bot ->
       (forall P0 (t : vec term (ar_preds P0)), P (atom P0 t)) ->
       (forall (b0 : binop) (f1 : form), P f1 -> forall f2 : form, P f2 -> P (bin b0 f1 f2)) ->
       (forall (q : quantop) (f2 : form), (forall sigma, P (subst_form sigma f2)) -> P (quant q f2)) ->
       forall (f4 : form), P f4.
   Proof.
-    intros P H1 H2 H3 H4 H5 phi. induction phi using (@size_ind _ size). destruct phi.
+    intros P H1 H3 H4 H5 phi. induction phi using (@size_ind _ size). destruct phi.
     - apply H1.
-    - apply H2.
     - apply H3.
     - apply H4; apply H; cbn; lia.
     - apply H5. intros sigma. apply H. cbn. rewrite subst_size. lia.
@@ -382,7 +378,6 @@ Section Subst.
   Proof.
     induction phi in sigma, tau |- *; cbn; intros H.
     - reflexivity.
-    - reflexivity.
     - f_equal. apply map_ext. intros s. now apply subst_term_ext.
     - now erewrite IHphi1, IHphi2.
     - erewrite IHphi; trivial. now apply up_ext.
@@ -392,7 +387,6 @@ Section Subst.
     (forall n, sigma n = var n) -> phi[sigma] = phi.
   Proof.
     induction phi in sigma |- *; cbn; intros H.
-    - reflexivity.
     - reflexivity.
     - f_equal. erewrite map_ext; try apply map_id. intros s. now apply subst_term_id.
     - now erewrite IHphi1, IHphi2.
@@ -409,7 +403,6 @@ Section Subst.
     phi[sigma][tau] = phi[sigma >> subst_term tau].
   Proof.
     induction phi in sigma, tau |- *; cbn.
-    - reflexivity.
     - reflexivity.
     - f_equal. rewrite map_map. apply map_ext. intros s. apply subst_term_comp.
     - now rewrite IHphi1, IHphi2.
@@ -534,9 +527,9 @@ Qed.
 Lemma eq_dec_form : forall x y : form, {x = y}+{x <> y}.
 Proof.
 induction x ; destruct y ; auto.
-1-10: right ; intro ; inversion H.
-2-6: right ; intro ; inversion H.
-3-7: right ; intro ; inversion H.
+1-4: right ; intro ; inversion H.
+2-5: right ; intro ; inversion H.
+3-6: right ; intro ; inversion H.
 - destruct (eq_dec_preds P P0) ; subst.
   2: right ; intro ; inversion H ; auto.
   assert (J1: (forall t0 : term, InTv t0 (ar_preds P0) t -> forall y : term, {t0 = y} + {t0 <> y})).
@@ -555,14 +548,14 @@ Qed.
   Lemma form_all phi :
     { psi | phi = ∀ psi } + (~ exists psi, phi = ∀ psi).
   Proof.
-    destruct phi; try destruct q. 1-4,6: right; intros [psi H]; discriminate.
+    destruct phi; try destruct q. 1-3,5: right; intros [psi H]; discriminate.
     left. exists phi. reflexivity.
   Qed.
 
   Lemma form_ex phi :
     { psi | phi = ∃ psi } + (~ exists psi, phi = ∃ psi).
   Proof.
-    destruct phi; try destruct q. 1-5: right; intros [psi H]; discriminate.
+    destruct phi; try destruct q. 1-4: right; intros [psi H]; discriminate.
     left. exists phi. reflexivity.
   Qed.
 
@@ -583,7 +576,6 @@ Section PredicateSubstitution.
 Fixpoint atom_subst (s : forall (P : Σ_preds), Vector.t (@term Σ_funcs) (ar_preds P) -> form) (phi : form) :=
     match phi with
     | bot => bot
-    | top => top
     | atom P t => s P t
     | bin b phi psi => bin b (atom_subst s phi) (atom_subst s psi)
     | quant q phi => quant q (atom_subst s phi) 
@@ -607,7 +599,6 @@ Fixpoint atom_subst (s : forall (P : Σ_preds), Vector.t (@term Σ_funcs) (ar_pr
     induction phi.
     - easy.
     - cbn. easy.
-    - cbn. easy.
     - cbn. rewrite IHphi1. now rewrite IHphi2.
     - cbn. now rewrite IHphi.
   Qed.
@@ -622,7 +613,6 @@ Fixpoint atom_subst (s : forall (P : Σ_preds), Vector.t (@term Σ_funcs) (ar_pr
   intros Hresp.
   induction phi in s,rho,Hresp|-*.
   - easy.
-  - easy.
   - cbn.  easy.
   - cbn. rewrite IHphi1. 1: now rewrite IHphi2. easy.
   - cbn. f_equal. rewrite ! (subst_ext _ _ _ (up_var_comp _) ). rewrite IHphi. 1:easy.
@@ -635,7 +625,6 @@ Fixpoint atom_subst (s : forall (P : Σ_preds), Vector.t (@term Σ_funcs) (ar_pr
   intros Hresp.
   induction phi in s,rho,Hresp|-*.
   - easy.
-  - cbn. easy.
   - cbn. easy.
   - cbn. rewrite IHphi1. 1: now rewrite IHphi2. easy.
   - cbn. now rewrite IHphi.

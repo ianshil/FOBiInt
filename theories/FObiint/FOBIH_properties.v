@@ -165,7 +165,7 @@ Qed.
 
 Lemma prv_Top : forall Γ , FOBIH_prv Γ ⊤.
 Proof.
-intros. eapply MP. apply Ax ; apply A10 with (⊤ --> ⊤) ; reflexivity. apply imp_Id_gen.
+intros. apply imp_Id_gen.
 Qed.
 
 Lemma absorp_Or1 : forall A Γ ,
@@ -748,7 +748,7 @@ Section Prv.
     T |- phi[t..] -> T |- ∃ phi.
   Proof.
     intros H. eapply prv_MP; try apply H. constructor 2.
-    econstructor 17 ; reflexivity.
+    econstructor 16 ; reflexivity.
   Qed.
 
    Lemma prv_EE T A B :
@@ -767,7 +767,7 @@ Section Prv.
     T |- ∀ phi -> T |- phi[t..].
   Proof.
     intros H. eapply prv_MP; try apply H. constructor 2.
-    econstructor 16 ; reflexivity.
+    econstructor 15 ; reflexivity.
   Qed.
 
   Lemma prv_DI1 T A B :
